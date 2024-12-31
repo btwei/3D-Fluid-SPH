@@ -1,0 +1,10 @@
+# Build directories
+/build/
+
+# Vs code settings
+/.vscode/
+
+# Visual Studio settings
+/.vs/
+/out/
+CMakeSettings.json
