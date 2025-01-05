@@ -21,6 +21,7 @@ void FluidSim::mainLoop() {
 }
 
 void FluidSim::cleanup() {
+    renderer.cleanup();
 
     window.cleanup();
 }

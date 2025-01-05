@@ -1,6 +1,16 @@
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
+#include <iostream>
+
+#include "FluidSim.h"
 
 int main(){
-  return 0;
+    FluidSim app;
+
+    try {
+		app.run();
+	} catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
