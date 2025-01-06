@@ -18,7 +18,7 @@ void Renderer::mainLoop() {
 
     glUseProgram(fluidProgram);
     glBindVertexArray(VAO);
-    glDrawElements(GL_POINTS, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(_window);
 }
@@ -58,21 +58,19 @@ void Renderer::loadGeometry() {
 
 void Renderer::generateGrid() {
 
-    for(float i=0; i < 60; i++){
-        for(float j=0; j < 80; j++){
+    for(float i=0; i <= 60; i++){
+        for(float j=0; j <= 80; j++){
             vertices.push_back(j/40.0f-1.0f);
-            vertices.push_back(1.0f-i/30.0f);
-            indices.push_back((unsigned int)i*80+(unsigned int)j);
+            vertices.push_back(1.0f-i/30.0f);;
         }
     }
 
-    /*
-    for(int i=0; i < 59; i++) {
-        for(int j=0; j < 79; j++) {
-            unsigned int tl = i+j*80;
-            unsigned int tr = i+j*80+1;
-            unsigned int bl = i+(j+1)*80;
-            unsigned int br = i+(j+1)*80+1;
+    for(int i=0; i < 60; i++) {
+        for(int j=0; j < 80; j++) {
+            unsigned int tl = j+i*81;
+            unsigned int tr = j+i*81+1;
+            unsigned int bl = j+(i+1)*81;
+            unsigned int br = j+(i+1)*81+1;
 
             indices.push_back(tr);
             indices.push_back(tl);
@@ -82,7 +80,8 @@ void Renderer::generateGrid() {
             indices.push_back(bl);
             indices.push_back(br);
         }
-    }*/
+    }
+
 }
 
 void Renderer::compileAndLoadShaders(){
