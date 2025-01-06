@@ -14,12 +14,11 @@ void Renderer::init(GLFWwindow* window) {
 }
 
 void Renderer::mainLoop() {
-    glClearColor(0.3f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(fluidProgram);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, vertices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_POINTS, indices.size(), GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(_window);
 }
@@ -58,23 +57,22 @@ void Renderer::loadGeometry() {
 }
 
 void Renderer::generateGrid() {
-    vertices = {0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f};
-    indices = {0, 1, 3, 1, 2, 3};
 
-    /*
-    for(int i=0; i < 80; i++){
-        for(int j=0; j < 60; j++){
-            vertices.push_back(i*2/80-1);
-            vertices.push_back(j*2/60-1);
+    for(float i=0; i < 60; i++){
+        for(float j=0; j < 80; j++){
+            vertices.push_back(j/40.0f-1.0f);
+            vertices.push_back(1.0f-i/30.0f);
+            indices.push_back((unsigned int)i*80+(unsigned int)j);
         }
     }
 
-    for(int i=0; i < 79; i++) {
-        for(int j=0; j < 59; j++) {
-            unsigned int tl = j+i*80;
-            unsigned int tr = j+i*80+1;
-            unsigned int bl = j+(i+1)*80;
-            unsigned int br = j+(i+1)*80+1;
+    /*
+    for(int i=0; i < 59; i++) {
+        for(int j=0; j < 79; j++) {
+            unsigned int tl = i+j*80;
+            unsigned int tr = i+j*80+1;
+            unsigned int bl = i+(j+1)*80;
+            unsigned int br = i+(j+1)*80+1;
 
             indices.push_back(tr);
             indices.push_back(tl);
@@ -84,7 +82,7 @@ void Renderer::generateGrid() {
             indices.push_back(bl);
             indices.push_back(br);
         }
-    } */
+    }*/
 }
 
 void Renderer::compileAndLoadShaders(){
@@ -94,6 +92,7 @@ void Renderer::compileAndLoadShaders(){
 GLuint Renderer::buildShaderFromSource(const std::string& filenameVert, const std::string& filenameFrag){
     //Load vertex shader from file and compile via OpenGL
     std::vector<char> vertFile = readFile(filenameVert);
+    vertFile.push_back('\0');
     const GLchar* vertexShaderSource = vertFile.data();
 
     unsigned int vertexShader;
@@ -112,6 +111,7 @@ GLuint Renderer::buildShaderFromSource(const std::string& filenameVert, const st
 
     //Load fragment shader from file and compile via OpenGL
     std::vector<char> fragFile = readFile(filenameFrag);
+    fragFile.push_back('\0');
     const GLchar* fragmentShaderSource = fragFile.data();
 
     unsigned int fragmentShader;
