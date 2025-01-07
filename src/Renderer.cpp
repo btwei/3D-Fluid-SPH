@@ -11,6 +11,8 @@ void Renderer::init(GLFWwindow* window) {
 
     loadGeometry();
     compileAndLoadShaders();
+
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Renderer::mainLoop() {
@@ -26,6 +28,7 @@ void Renderer::mainLoop() {
 void Renderer::cleanup() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &propertyVBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(fluidProgram);
 }
@@ -36,10 +39,12 @@ void Renderer::framebuffer_size_callback(GLFWwindow* window, int width, int heig
 
 void Renderer::loadGeometry() {
     generateGrid();
+    generateProperties();
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+    glGenBuffers(1, &propertyVBO);
 
     glBindVertexArray(VAO);
 
@@ -51,6 +56,12 @@ void Renderer::loadGeometry() {
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, propertyVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * properties.size(), properties.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -82,6 +93,15 @@ void Renderer::generateGrid() {
         }
     }
 
+}
+
+void Renderer::generateProperties() {
+    for(float i=0; i <= 60; i++){
+        for(float j=0; j <= 80; j++){
+            properties.push_back(0.5f);
+            properties.push_back(0.0f);
+        }
+    }
 }
 
 void Renderer::compileAndLoadShaders(){

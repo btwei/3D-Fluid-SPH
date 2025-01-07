@@ -17,11 +17,12 @@ public:
 private:
     GLFWwindow* _window;
 
-    GLuint VBO, EBO, VAO = 0;
+    GLuint VBO, propertyVBO, EBO, VAO = 0;
     GLuint fluidProgram = 0;
 
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
+    std::vector<float> properties;
 
     void loadGeometry();
     void compileAndLoadShaders();
@@ -30,6 +31,7 @@ private:
     static std::vector<char> readFile(const std::string& filename);
 
     void generateGrid();
+    void generateProperties();
     GLuint buildShaderFromSource(const std::string& filenameFrag, const std::string& filenameVert);
 };
 
