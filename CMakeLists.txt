@@ -11,11 +11,8 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-# Get all sources files from the src directory
-file(GLOB_RECURSE SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
-
 # Add the executable
-add_executable(fluidSimulation src/main.cpp src/FluidSim.cpp src/Renderer.cpp src/Window.cpp src/glad.c ${SOURCE_FILES})
+add_executable(fluidSimulation src/main.cpp src/FluidSim.cpp src/Renderer.cpp src/Window.cpp src/glad.c)
 
 # Include directories
 target_include_directories(fluidSimulation PRIVATE ${CMAKE_SOURCE_DIR}/include)
