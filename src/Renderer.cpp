@@ -1,7 +1,8 @@
 #include "Renderer.h"
 
-void Renderer::init(GLFWwindow* window) {
+void Renderer::init(GLFWwindow* window, SPH* solver) {
     _window = window;
+    _solver = solver;
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -9,103 +10,46 @@ void Renderer::init(GLFWwindow* window) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
-    loadGeometry();
+    configureBuffers();
     compileAndLoadShaders();
 
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Renderer::mainLoop() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(fluidProgram);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glUseProgram(pointsProgram);
+    glDrawArrays(GL_POINTS, 0, _solver->getParticleCount());
+    glBindVertexArray(0);
 
     glfwSwapBuffers(_window);
 }
 
 void Renderer::cleanup() {
     glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &propertyVBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(fluidProgram);
+    glDeleteProgram(pointsProgram);
 }
 
 void Renderer::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void Renderer::loadGeometry() {
-    generateGrid();
-    generateProperties();
-
+void Renderer::configureBuffers() {
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    glGenBuffers(1, &propertyVBO);
-
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, _solver->getBufferId());
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, propertyVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * properties.size(), properties.data(), GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-void Renderer::generateGrid() {
-
-    for(float i=0; i <= 60; i++){
-        for(float j=0; j <= 80; j++){
-            vertices.push_back(j/40.0f-1.0f);
-            vertices.push_back(1.0f-i/30.0f);;
-        }
-    }
-
-    for(int i=0; i < 60; i++) {
-        for(int j=0; j < 80; j++) {
-            unsigned int tl = j+i*81;
-            unsigned int tr = j+i*81+1;
-            unsigned int bl = j+(i+1)*81;
-            unsigned int br = j+(i+1)*81+1;
-
-            indices.push_back(tr);
-            indices.push_back(tl);
-            indices.push_back(bl);
-
-            indices.push_back(tr);
-            indices.push_back(bl);
-            indices.push_back(br);
-        }
-    }
-
-}
-
-void Renderer::generateProperties() {
-    for(float i=0; i <= 60; i++){
-        for(float j=0; j <= 80; j++){
-            properties.push_back(0.5f);
-            properties.push_back(0.0f);
-        }
-    }
-}
-
 void Renderer::compileAndLoadShaders(){
-    fluidProgram = buildShaderFromSource("../shaders/fluid.vert", "../shaders/fluid.frag");
+    pointsProgram = buildShaderFromSource("../shaders/points.vert", "../shaders/points.frag");
 }
 
 GLuint Renderer::buildShaderFromSource(const std::string& filenameVert, const std::string& filenameFrag){
