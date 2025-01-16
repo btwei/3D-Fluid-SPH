@@ -1,6 +1,7 @@
 #ifndef FLUIDSIM_H
 #define FLUIDSIM_H
 
+#include "Solver.h"
 #include "Renderer.h"
 #include "Window.h"
 
@@ -11,6 +12,7 @@ class FluidSim {
 public:
     void run();
 private:
+    SPH solver;
     Window window;
     Renderer renderer;
 
