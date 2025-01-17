@@ -20,7 +20,11 @@ struct particle{
 
 class SPH{
 public:
-    void init(int particleCount);
+    static constexpr int gridDepth = 10; /* Fixed number of particles to allow per grid for Nearest Neighbor checks */
+    static constexpr float h = 0.2;
+    static constexpr int particleCount = 1000;
+
+    void init();
     void mainLoop();
     void cleanup();
 
@@ -29,7 +33,7 @@ public:
 private:
     std::vector<particle> particles;
     int _particleCount;
-    GLuint particleSSBO;
+    GLuint particleSSBO, gridSSBO, listSSBO;
     GLuint updateProgram;
 
     void compileAndLoadShaders();

@@ -20,6 +20,7 @@ void Renderer::mainLoop() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(VAO);
+    glPointSize(5.0f);
     glUseProgram(pointsProgram);
     glDrawArrays(GL_POINTS, 0, _solver->getParticleCount());
     glBindVertexArray(0);

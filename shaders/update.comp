@@ -11,8 +11,26 @@ layout(std430, binding = 0) buffer particleBuffer {
     Particle particles[];
 };
 
+layout(std430, binding = 1) buffer gridBuffer {
+    uint gridIndex[];
+};
+
+layout(std430, binding = 2) buffer listBuffer {
+    uint listData[];
+};
+
 void main(){
     uint idx = gl_GlobalInvocationID.x;
 
     if(idx >= particles.length()) return;
+
+    //Initialize gridBuffer [0, 10, 20, ...]
+
+    memoryBarrier();
+
+    //Write listData atomically
+
+    memoryBarrier();
+
+    //nearest neighbor, then SPH
 }

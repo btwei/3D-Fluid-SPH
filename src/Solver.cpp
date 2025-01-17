@@ -1,6 +1,6 @@
 #include "Solver.h"
 
-void SPH::init(int particleCount){
+void SPH::init(){
     _particleCount = particleCount;
 
     std::random_device rd;
@@ -22,6 +22,17 @@ void SPH::init(int particleCount){
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, particles.size() * sizeof(particle), particles.data(), GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleSSBO);
+
+    glGenBuffers(1, &gridSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gridSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, particleCount * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridSSBO);
+
+    glGenBuffers(1, &listSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, listSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, particleCount * gridDepth * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, listSSBO);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     compileAndLoadShaders();
@@ -37,6 +48,8 @@ void SPH::mainLoop() {
 
 void SPH::cleanup(){
     glDeleteBuffers(1, &particleSSBO);
+    glDeleteBuffers(1, &gridSSBO);
+    glDeleteBuffers(1, &listSSBO);
     glDeleteProgram(updateProgram);
 }
 
