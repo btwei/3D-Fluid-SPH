@@ -11,26 +11,52 @@ layout(std430, binding = 0) buffer particleBuffer {
     Particle particles[];
 };
 
-layout(std430, binding = 1) buffer gridBuffer {
-    uint gridIndex[];
+layout(std430, binding = 1) buffer listStartBuffer {
+    uint listStart[];
 };
 
-layout(std430, binding = 2) buffer listBuffer {
+layout(std430, binding = 2) buffer listDataBuffer {
     uint listData[];
 };
+
+uniform float h;
+
+uvec3 getGridIndex(vec3 position);
+uint flattenGridIndex(uvec3 gridIndex);
+
+uint maxUint = 0xffffffffu;
 
 void main(){
     uint idx = gl_GlobalInvocationID.x;
 
-    if(idx >= particles.length()) return;
+    //Initialize indexBuffer and listBuffer
+    if(idx < listStart.length()) listStart[idx] = maxUint;
+    if(idx < listData.length()) listData[idx] = maxUint;
 
-    //Initialize gridBuffer [0, 10, 20, ...]
+    if(idx >= particles.length()) return;
 
     memoryBarrier();
 
-    //Write listData atomically
+    //Calculate this particle's grid
+    uint gridIndex = flattenGridIndex(getGridIndex(particles[idx].position.xyz));
+
+    //Go to the listStart buffer and try to add itself to that grid space
+    uint currentVal = atomicCompSwap(listStart[gridIndex], maxUint, idx);
+
+    while(currentVal != maxUint) {
+        //Traverse the list Buffer
+        currentVal = atomicCompSwap(listData[currentVal], maxUint, idx);
+    }
 
     memoryBarrier();
 
     //nearest neighbor, then SPH
+}
+
+uvec3 getGridIndex(vec3 position) {
+    return uvec3(floor((position + 1.0f) / 0.2f));
+}
+
+uint flattenGridIndex(uvec3 gridIndex) {
+    return gridIndex.x + 10 * (gridIndex.y + 10 * gridIndex.z);
 }

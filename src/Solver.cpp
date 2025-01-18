@@ -3,6 +3,7 @@
 void SPH::init(){
     _particleCount = particleCount;
 
+    //Initialize Random Particles
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
@@ -14,6 +15,11 @@ void SPH::init(){
         p.velocity = glm::vec3(dist(mt) * 0.1, dist(mt) * 0.1, dist(mt) * 0.1);
     }
 
+    //Derive Grid Dimensions from h (needs to be at least h x h per grid box)
+    size_t gridLength = ceil(2.0 / h);
+    size_t gridSize = gridLength * gridLength * gridLength;
+
+    //Check if GLAD properly initialized
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
         throw std::runtime_error("Failed to initialize GLAD");
     }
@@ -25,17 +31,20 @@ void SPH::init(){
 
     glGenBuffers(1, &gridSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gridSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, particleCount * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gridSize * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridSSBO);
 
     glGenBuffers(1, &listSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, listSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, particleCount * gridDepth * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, particleCount * sizeof(uint), nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, listSSBO);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     compileAndLoadShaders();
+
+    hLocation = glGetUniformLocation(updateProgram, "h");
+    glUniform1f(hLocation, h);
 }
 
 void SPH::mainLoop() {
