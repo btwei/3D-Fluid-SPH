@@ -15,8 +15,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 struct particle{
-    glm::vec3 position;
-    glm::vec3 velocity;
+    glm::vec4 position;
+    glm::vec4 velocity;
+    glm::vec4 properties;
 };
 
 class SPH{
@@ -30,6 +31,7 @@ public:
 
     GLuint getBufferId();
     int getParticleCount();
+    size_t getParticleSize();
 private:
     std::vector<particle> particles;
     int _particleCount;

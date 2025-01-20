@@ -11,8 +11,8 @@ void SPH::init(){
     particles = std::vector<particle>(particleCount);
     
     for (particle& p : particles){
-        p.position = glm::vec3(dist(mt), dist(mt), dist(mt));
-        p.velocity = glm::vec3(dist(mt) * 0.1, dist(mt) * 0.1, dist(mt) * 0.1);
+        p.position = glm::vec4(dist(mt), dist(mt), dist(mt), 0.0);
+        p.velocity = glm::vec4(dist(mt) * 0.1, dist(mt) * 0.1, dist(mt) * 0.1, 0.0);
     }
 
     //Derive Grid Dimensions from h (needs to be at least h x h per grid box)
@@ -70,8 +70,12 @@ int SPH::getParticleCount(){
     return _particleCount;
 }
 
+size_t SPH::getParticleSize(){
+    return sizeof(particle);
+}
+
 void SPH::compileAndLoadShaders(){
-    updateProgram = buildShaderFromSource("../shaders/update.comp");
+    updateProgram = buildShaderFromSource("../shaders/sph.comp");
 }
 
 GLuint SPH::buildShaderFromSource(const std::string& filenameComp){
