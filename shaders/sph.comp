@@ -5,7 +5,7 @@ layout(local_size_x = 256) in;
 struct Particle {
     vec4 position;
     vec4 velocity;
-    vec2 properties;
+    vec4 properties;
 };
 
 layout(std430, binding = 0) buffer particleBuffer {
@@ -21,15 +21,19 @@ layout(std430, binding = 2) buffer gridParticleDataBuffer {
 };
 
 uniform float h;
-float mass = 1.0; /* Mass per particle      */
-float k = 10000;  /* Gas Stiffness Constant */
-float p0 = 1000;  /* Rest Density           */
+float mass = 1.0;           /* Mass per particle                 */
+float k = 10000;            /* Gas Stiffness Constant            */
+float p0 = 1000;            /* Rest Density                      */
+float mu = 0.001;           /* Viscosity Coefficient             */
+vec3 g = vec3(0, -9.81, 0); /* gravitational acceleration vector */
 
 float pi = 3.1415926538;
 
 ivec3 getCellIndex(vec3 position);
 uint flattenCellIndex(ivec3 cellIndex);
 float poly6(float distance, float h);
+vec3 g_spiky(vec3 rij, float r, float h);
+float g2_spiky(float r, float h);
 
 uint maxUint = 0xffffffffu;
 vec3 gridMin = vec3(-1, -1, -1);
@@ -114,6 +118,47 @@ void main(){
     particles[idx].properties.y = pressure;
 
     memoryBarrier();
+
+    //Calculate forces
+
+    vec3 Fpressure = vec3(0);
+    vec3 Fviscosity = vec3(0);
+
+    for (int n = 0; n < 27; ++n) {
+        ivec3 neighborCell = cellIndex + neighborOffsets[n];
+
+        // Check if the neighbor cell is within grid bounds
+        if (neighborCell.x >= 0 && neighborCell.x < cellMax.x &&
+            neighborCell.y >= 0 && neighborCell.y < cellMax.y &&
+            neighborCell.z >= 0 && neighborCell.z < cellMax.z) {
+            
+            // Access particles in this neighbor cell
+            uint flatNeighborCellIndex = flattenCellIndex(neighborCell);
+
+            // Fetch particles from this cell and process them
+            uint neighborParticle = particleStart[flatNeighborCellIndex];
+
+            while (neighborParticle != maxUint){
+                //process particle
+                vec3 rij = particles[idx].position.xyz - particles[neighborParticle].position.xyz;
+                float distance = length(rij);
+
+                if(distance < h){
+                    Fpressure += -1 * mass * (pressure / density / density + particles[neighborParticle].properties.y / particles[neighborParticle].properties.x / particles[neighborParticle].properties.x) * g_spiky(rij, distance, h);
+                    Fviscosity += mu * mass * g2_spiky(distance, h) * (particles[neighborParticle].velocity.xyz - particles[idx].velocity.xyz) / particles[neighborParticle].properties.x;
+                }
+
+                //move onto the next particle
+                neighborParticle = particleNext[neighborParticle];
+            }
+        }
+    }
+
+    vec3 Fgravity = mass * g;
+
+    vec3 Fnet = Fpressure + Fviscosity + Fgravity;
+
+    vec3 a = Fnet / mass;
 }
 
 ivec3 getCellIndex(vec3 position) {
@@ -125,5 +170,13 @@ uint flattenCellIndex(ivec3 cellIndex) {
 }
 
 float poly6(float r, float h) {
-    return 315 / 64 / pi / pow(h, 9) * pow(h*h - r*r, 3);
+    return 315.0 / 64.0 / pi / pow(h, 9) * pow(h*h - r*r, 3);
+}
+
+vec3 g_spiky(vec3 rij, float r, float h) {
+    return -45.0 / pi / pow(h, 6) / r * (h - r) * (h - r) * rij;
+}
+
+float g2_spiky(float r, float h) {
+    return 45.0 / pi / pow(h, 6) * (h-r);
 }
