@@ -1,6 +1,6 @@
 #version 450 core
 
-layout(local_size_x = 256) in;
+layout(local_size_x = 1024) in;
 
 struct Particle {
     vec4 position;
@@ -21,10 +21,14 @@ layout(std430, binding = 2) buffer gridParticleDataBuffer {
 };
 
 uniform float h;
+
+float timestep = 0.003;//1.0 / 60.0;
+float damping = 0.1;
+
 float mass = 1.0;           /* Mass per particle                 */
-float k = 10000;            /* Gas Stiffness Constant            */
-float p0 = 1000;            /* Rest Density                      */
-float mu = 0.001;           /* Viscosity Coefficient             */
+float k = 1000;            /* Gas Stiffness Constant            */
+float p0 = 200;            /* Rest Density                      */
+float mu = 0.1;           /* Viscosity Coefficient             */
 vec3 g = vec3(0, -9.81, 0); /* gravitational acceleration vector */
 
 float pi = 3.1415926538;
@@ -77,7 +81,7 @@ void main(){
         swapVal = atomicCompSwap(particleNext[swapVal], maxUint, idx);
     }
 
-    memoryBarrier();
+    barrier();
 
     //calculate density and pressure from nearest neighbors
 
@@ -111,13 +115,13 @@ void main(){
         }
     }
 
-    float pressure = k * (density - p0);
+    float pressure = max(0.0001, k * (density - p0));
 
     //write density and pressure to shared memory
     particles[idx].properties.x = density;
     particles[idx].properties.y = pressure;
 
-    memoryBarrier();
+    barrier();
 
     //Calculate forces
 
@@ -143,9 +147,11 @@ void main(){
                 vec3 rij = particles[idx].position.xyz - particles[neighborParticle].position.xyz;
                 float distance = length(rij);
 
-                if(distance < h){
-                    Fpressure += -1 * mass * (pressure / density / density + particles[neighborParticle].properties.y / particles[neighborParticle].properties.x / particles[neighborParticle].properties.x) * g_spiky(rij, distance, h);
+                if(distance < h && neighborParticle != idx && distance != 0){
+                    Fpressure += g_spiky(rij, distance, h) * -1.0 * mass * (pressure / density / density + particles[neighborParticle].properties.y / particles[neighborParticle].properties.x / particles[neighborParticle].properties.x);
                     Fviscosity += mu * mass * g2_spiky(distance, h) * (particles[neighborParticle].velocity.xyz - particles[idx].velocity.xyz) / particles[neighborParticle].properties.x;
+                    if(isnan(Fpressure)[0]) particles[idx].properties.z = 1.0;
+                    if(particles[neighborParticle].properties.x == 0) particles[idx].properties.w = float(neighborParticle);
                 }
 
                 //move onto the next particle
@@ -159,6 +165,36 @@ void main(){
     vec3 Fnet = Fpressure + Fviscosity + Fgravity;
 
     vec3 a = Fnet / mass;
+
+    particles[idx].velocity.xyz += a * timestep;
+
+    particles[idx].position.xyz += particles[idx].velocity.xyz * timestep;
+
+    //Handle boundaries
+
+    if(particles[idx].position.x < gridMin.x){
+        particles[idx].position.x = gridMin.x;
+        particles[idx].velocity.x *= -damping;
+    }else if(particles[idx].position.x >= gridMax.x){
+        particles[idx].position.x = gridMax.x - 0.0001;
+        particles[idx].velocity.x *= -damping;
+    }
+
+    if(particles[idx].position.y < gridMin.y){
+        particles[idx].position.y = gridMin.y;
+        particles[idx].velocity.y *= -damping;
+    }else if(particles[idx].position.y >= gridMax.y){
+        particles[idx].position.y = gridMax.y - 0.0001;
+        particles[idx].velocity.y *= -damping;
+    }
+
+    if(particles[idx].position.z < gridMin.z){
+        particles[idx].position.z = gridMin.z;
+        particles[idx].velocity.z *= -damping;
+    }else if(particles[idx].position.z >= gridMax.z){
+        particles[idx].position.z = gridMax.z - 0.0001;
+        particles[idx].velocity.z *= -damping;
+    }
 }
 
 ivec3 getCellIndex(vec3 position) {
