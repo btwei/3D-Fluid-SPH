@@ -1,6 +1,8 @@
 #ifndef FLUIDSIM_H
 #define FLUIDSIM_H
 
+#include <chrono>
+
 #include "Solver.h"
 #include "Renderer.h"
 #include "Window.h"

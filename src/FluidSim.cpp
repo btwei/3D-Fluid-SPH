@@ -7,7 +7,7 @@ void FluidSim::run() {
 }
 
 void FluidSim::init() {
-    window.init(WIDTH, HEIGHT, "2D Fluid Sim");
+    window.init(WIDTH, HEIGHT, "3D SPH Fluid Sim");
     solver.init();
     renderer.init(window.getGLFWWindow(), &solver);
 }

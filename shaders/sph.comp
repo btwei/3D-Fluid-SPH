@@ -22,11 +22,11 @@ layout(std430, binding = 2) buffer gridParticleDataBuffer {
 
 uniform float h;
 
-float timestep = 0.003;//1.0 / 60.0;
+float timestep = 1.0 / 600.0;
 float damping = 0.1;
 
 float mass = 1.0;           /* Mass per particle                 */
-float k = 1000;            /* Gas Stiffness Constant            */
+float k = 100;            /* Gas Stiffness Constant            */
 float p0 = 200;            /* Rest Density                      */
 float mu = 0.1;           /* Viscosity Coefficient             */
 vec3 g = vec3(0, -9.81, 0); /* gravitational acceleration vector */

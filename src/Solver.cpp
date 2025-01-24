@@ -12,12 +12,15 @@ void SPH::init(){
     
     for (particle& p : particles){
         p.position = glm::vec4(dist(mt), dist(mt), dist(mt), 0.0);
-        p.velocity = glm::vec4(dist(mt) * 0.1, dist(mt) * 0.1, dist(mt) * 0.1, 0.0);
+        //p.velocity = glm::vec4(dist(mt) * 0.1, dist(mt) * 0.1, dist(mt) * 0.1, 0.0);
     }
 
     //Derive Grid Dimensions from h (needs to be at least h x h per grid box)
     size_t gridLength = ceil(2.0 / h);
     size_t gridSize = gridLength * gridLength * gridLength;
+
+    accumulator = std::chrono::duration<double>(0.0);
+    firstLoop = true;
 
     //Check if GLAD properly initialized
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
@@ -47,12 +50,24 @@ void SPH::init(){
 }
 
 void SPH::mainLoop() {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleSSBO);
-    glUseProgram(updateProgram);
-    glUniform1f(hLocation, h);
-    glDispatchCompute(1, 1, 1);//(_particleCount + 255) / 256, 1, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    if(firstLoop) initializeFirstLoop();
+    auto newTime = std::chrono::high_resolution_clock::now();
+    auto stepTime = newTime - currentTime;
+    currentTime = newTime;
+    accumulator += stepTime;
+
+    while(accumulator >= fixedTimeStep){
+        for(int i=0; i < 10; i++){ //use substeps for greater numerical stability
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleSSBO);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleSSBO);
+            glUseProgram(updateProgram);
+            glUniform1f(hLocation, h);
+            glDispatchCompute(1, 1, 1);//(_particleCount + 255) / 256, 1, 1);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        }
+
+        accumulator -= fixedTimeStep;
+    }
 }
 
 void SPH::cleanup(){
@@ -132,4 +147,9 @@ std::vector<char> SPH::readFile(const std::string& filename) {
 	file.close();
 
 	return buffer;
+}
+
+void SPH::initializeFirstLoop(){
+    currentTime = std::chrono::high_resolution_clock::now();
+    firstLoop = false;
 }
