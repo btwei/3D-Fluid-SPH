@@ -27,7 +27,7 @@ float damping = 0.1;
 
 float mass = 1.0;           /* Mass per particle                 */
 float k = 100;            /* Gas Stiffness Constant            */
-float p0 = 200;            /* Rest Density                      */
+float p0 = 500;            /* Rest Density                      */
 float mu = 0.1;           /* Viscosity Coefficient             */
 vec3 g = vec3(0, -9.81, 0); /* gravitational acceleration vector */
 

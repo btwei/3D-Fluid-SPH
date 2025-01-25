@@ -13,7 +13,8 @@ void Renderer::init(GLFWwindow* window, SPH* solver) {
     configureBuffers();
     compileAndLoadShaders();
 
-    //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    viewMatrix = glm::mat4(1.0f);
+    viewMatrixLocation = glGetUniformLocation(pointsProgram, "viewMatrix");
 }
 
 void Renderer::mainLoop() {
@@ -22,6 +23,7 @@ void Renderer::mainLoop() {
     glBindVertexArray(VAO);
     glPointSize(5.0f);
     glUseProgram(pointsProgram);
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glDrawArrays(GL_POINTS, 0, _solver->getParticleCount());
     glBindVertexArray(0);
 

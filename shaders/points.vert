@@ -3,6 +3,8 @@
 layout (location = 0) in vec3 inPosition;
 layout (location = 2) in vec4 inProperties;
 
+uniform mat4 viewMatrix;
+
 out vec4 properties;
 
 mat4 m = mat4(1.0, 0.0, 0.0, 0.0,
@@ -18,6 +20,6 @@ mat4 p = mat4(0.5, 0.0, 0.0, 0.0,
 void main() {
     properties = inProperties;
 
-    gl_Position = p * m * vec4(inPosition, 1.0);
+    gl_Position = p * viewMatrix * m * vec4(inPosition, 1.0);
     gl_PointSize = 5.0;
 }

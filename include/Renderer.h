@@ -6,8 +6,11 @@
 #include <stdexcept>
 #include <vector>
 
+#define GLM_FORCE_RADIANS
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Solver.h"
 
@@ -22,10 +25,13 @@ private:
 
     GLuint VAO = 0;
     GLuint pointsProgram = 0;
+    GLuint viewMatrixLocation = 0;
 
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
     std::vector<float> properties;
+
+    glm::mat4 viewMatrix;
 
     void configureBuffers();
     void compileAndLoadShaders();
