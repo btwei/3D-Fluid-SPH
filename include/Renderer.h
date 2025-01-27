@@ -14,6 +14,15 @@
 
 #include "Solver.h"
 
+enum RenderMode {
+    RENDER_POINTS,
+    RENDER_SSFR,
+    RENDER_MODE_COUNT
+};
+
+static int _width = 800;
+static int _height = 600;
+
 class Renderer{
 public:
     void init(GLFWwindow* window, SPH* solver);
@@ -24,14 +33,19 @@ private:
     GLFWwindow* _window;
 
     GLuint VAO = 0;
-    GLuint pointsProgram = 0;
+    GLuint quadVAO, quadVBO, quadEBO = 0;
+    GLuint pointsProgram, ssfrProgram = 0;
     GLuint viewMatrixLocation = 0;
+    GLuint framebuffer = 0;
+    GLuint colorTexture, depthBuffer = 0;
 
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
     std::vector<float> properties;
 
     glm::mat4 viewMatrix;
+
+    int renderMode = RENDER_SSFR;
 
     void configureBuffers();
     void compileAndLoadShaders();

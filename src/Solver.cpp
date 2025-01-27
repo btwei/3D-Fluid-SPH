@@ -62,7 +62,7 @@ void SPH::mainLoop() {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleSSBO);
             glUseProgram(updateProgram);
             glUniform1f(hLocation, h);
-            glDispatchCompute(1, 1, 1);//(_particleCount + 255) / 256, 1, 1);
+            glDispatchCompute(1, 1, 1);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
