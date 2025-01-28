@@ -37,7 +37,7 @@ private:
     GLuint pointsProgram, ssfrProgram = 0;
     GLuint viewMatrixLocation = 0;
     GLuint framebuffer = 0;
-    GLuint colorTexture, depthBuffer = 0;
+    GLuint colorTexture, depthTexture = 0;
 
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
